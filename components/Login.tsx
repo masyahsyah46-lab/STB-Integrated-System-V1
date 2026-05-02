@@ -38,7 +38,8 @@ const Login: React.FC = () => {
       // Verify access and get profile from Google Sheets
       const result = await gasService.checkAuth(email);
       
-      if (result && result.status === 'success') {
+      // TAMBAHAN: Kita tambah "&& result.user" untuk pastikan data pengguna wujud sebelum teruskan
+      if (result && result.status === 'success' && result.user) {
         const userData = result.user;
         
         // Inject PIN for legacy Firebase functionality
@@ -46,6 +47,18 @@ const Login: React.FC = () => {
           userData.pin = EMAIL_PIN_MAPPING[email];
           console.log(`PIN mapping applied for ${email}`);
         }
+
+        // Save session
+        localStorage.setItem('stb_user_email', email);
+        localStorage.setItem('stb_user_data', JSON.stringify(userData));
+        setUser(userData);
+        
+        toast.success(lang === 'ms' ? `Selamat Datang, ${userData.name}` : `Welcome, ${userData.name}`);
+      } else {
+        setError(lang === 'ms' 
+          ? "Akses Ditolak: Profil e-mel anda tiada dalam pangkalan data sistem (Google Sheets)." 
+          : "Access Denied: Your email profile is not in the system database (Google Sheets).");
+      }
 
         // Save session
         localStorage.setItem('stb_user_email', email);
