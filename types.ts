@@ -176,6 +176,7 @@ export interface ExcelRow {
   updateType?: string;
   bpkuStatus?: string;
   meetingStatus?: string;
+  alamatPerniagaan?: string;
 }
 
 export interface DashboardStats {

@@ -94,8 +94,15 @@ export const useStore = create<AppState>((set, get) => ({
 
   setUser: (user) => {
     set({ user });
-    if (user) localStorage.setItem('stb_user', JSON.stringify(user));
-    else localStorage.removeItem('stb_user');
+    if (user) {
+      localStorage.setItem('stb_user', JSON.stringify(user));
+      localStorage.setItem('stb_session_active', 'true');
+    } else {
+      localStorage.removeItem('stb_user');
+      localStorage.removeItem('stb_user_email');
+      localStorage.removeItem('stb_user_data');
+      localStorage.removeItem('stb_session_active');
+    }
   },
   
   setSystemUsers: (systemUsers) => set({ systemUsers }),
@@ -162,6 +169,18 @@ export const useStore = create<AppState>((set, get) => ({
     const { user } = get();
     set({ isLoading: true, loadingStep: 10 });
     
+    // Auto-login if session exists
+    if (!user) {
+      const email = localStorage.getItem('stb_user_email');
+      const data = localStorage.getItem('stb_user_data');
+      if (email && data) {
+        try {
+          const parsed = JSON.parse(data);
+          set({ user: parsed });
+        } catch (e) {}
+      }
+    }
+
     try {
       await ensureFirebaseAuth();
       const users = await gasService.fetchUsers();
@@ -284,7 +303,13 @@ export const useStore = create<AppState>((set, get) => ({
     if (confirm(lang === 'en' ? "Are you sure you want to logout?" : "Adakah anda pasti ingin log keluar?")) {
       set({ user: null, activeTab: 'dashboard', activeApplication: null });
       localStorage.removeItem('stb_user');
-      localStorage.removeItem('stb_session');
+      localStorage.removeItem('stb_user_email');
+      localStorage.removeItem('stb_user_data');
+      localStorage.removeItem('stb_session_active');
+      localStorage.removeItem('stb_applications');
+      
+      // Clear Google Auth token if needed or just reload to reset state
+      window.location.reload();
     }
   },
 

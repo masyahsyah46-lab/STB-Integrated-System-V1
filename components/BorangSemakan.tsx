@@ -2,9 +2,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ApplicationData, Personnel } from '../types';
 import { JENIS_PERMOHONAN, GRED_OPTIONS } from '../constants';
-import { extractDataWithAI } from '../services/geminiService';
 import { v4 as uuidv4 } from 'uuid';
 import { useStore } from '../store/useStore';
+import { gasService } from '../services/gasService';
 import { toast } from 'sonner';
 import SnailProgress from './SnailProgress';
 import { FileUp, Printer, Save, Trash2, FileText, CheckCircle2 } from 'lucide-react';
@@ -140,7 +140,9 @@ const BorangSemakan: React.FC<BorangProps> = () => {
       if (mode === 'ai') {
         setProgress(60);
         try {
-          aiData = await extractDataWithAI(fullText);
+          // Identify if it's a form or profile based on context (default borang)
+          const selectionType = formData.syarikat ? 'profile' : 'borang';
+          aiData = await gasService.processAI(fullText, selectionType);
         } catch (aiErr: any) {
           console.error("AI Extraction Error:", aiErr);
           toast.error(isEn ? `AI Error: ${aiErr.message || 'Unknown error'}` : `Ralat AI: ${aiErr.message || 'Ralat tidak diketahui'}`);
@@ -248,12 +250,18 @@ const BorangSemakan: React.FC<BorangProps> = () => {
     if (confirm(isEn ? "Would you like to save this form to the company's Drive folder before printing?" : "Adakah anda ingin menyimpan borang ini ke folder Drive syarikat sebelum mencetak?")) {
       const toastId = toast.loading(isEn ? "Saving to Drive..." : "Menyimpan ke Drive...");
       try {
-        const { gasService } = await import('../services/gasService');
         await gasService.submitToGas({
-          ...formData,
-          update_type: 'cetak_dan_simpan_pdf'
+          action: 'saveToDrive',
+          data: {
+             ...formData,
+             // Ensure legacy flags are sent to GAS
+             is_pemutihan: formData.is_pemutihan === true,
+             jenis: formData.jenis
+          },
+          user: user?.name,
+          source: user?.source
         });
-        toast.success(isEn ? "Saved and ready to print!" : "Berjaya disimpan dan sedia untuk cetakan!", { id: toastId });
+        toast.success(isEn ? "Saved and Email Triggered!" : "Berjaya disimpan dan Emel dicetuskan!", { id: toastId });
       } catch (err) {
         toast.error(isEn ? "Failed to save to Drive" : "Gagal simpan ke Drive", { id: toastId });
       }
@@ -299,6 +307,18 @@ const BorangSemakan: React.FC<BorangProps> = () => {
                   🔍 LIHAT HASIL EKSTRAKSI
                 </button>
               )}
+              <button 
+                onClick={() => {
+                  if (confirm(isEn ? "Are you sure you want to clear the form?" : "Adakah anda pasti ingin mengosongkan borang?")) {
+                    localStorage.removeItem('stb_form_persistence');
+                    setFormData(initialData || defaultFormData);
+                    toast.error(isEn ? "Form Cleared" : "Borang Dikosongkan");
+                  }
+                }}
+                className="px-3 py-1 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg text-[10px] font-black border border-rose-100 transition-all"
+              >
+                🔄 SET SEMULA BORANG
+              </button>
             </div>
           </div>
           <div className="flex gap-2 w-full max-w-md">
@@ -363,6 +383,20 @@ const BorangSemakan: React.FC<BorangProps> = () => {
           </div>
           <div className="lg:col-span-2">
             <InputGroup label={t('tarikh_mohon')} type="date" value={formData.tarikh_mohon || ''} onChange={v => updateField('tarikh_mohon', v)} themeColor={themeColor} />
+          </div>
+          <div className="lg:col-span-2 space-y-2">
+             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">STATUS PEMUTIHAN</label>
+             <div className="flex gap-1 h-[48px]">
+               {[true, false].map(v => (
+                 <button 
+                  key={String(v)} 
+                  onClick={() => updateField('is_pemutihan', v)} 
+                  className={`flex-1 rounded-xl border-2 text-[10px] font-black ${formData.is_pemutihan === v ? `bg-rose-50 border-rose-600 text-rose-700` : 'bg-slate-50 border-transparent text-slate-400'}`}
+                 >
+                   {v ? 'PEMUTIHAN' : 'NORMAL'}
+                 </button>
+               ))}
+             </div>
           </div>
           <div className="lg:col-span-2 space-y-2">
              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('semakan_tatatertib')}</label>

@@ -143,7 +143,8 @@ const TapisanExcel: React.FC<TapisanProps> = ({ view, existingApps = [] }) => {
         category: headers.findIndex(h => h.includes('category') || h.includes('kategori')),
         updateType: headers.findIndex(h => h.includes('update type') || h.includes('jenis perubahan') || h.includes('perubahan') || h.includes('update')),
         bpku: headers.findIndex(h => h.includes('bpku')),
-        meeting: headers.findIndex(h => h.includes('meeting') || h.includes('mesyuarat'))
+        meeting: headers.findIndex(h => h.includes('meeting') || h.includes('mesyuarat')),
+        address: headers.findIndex(h => h.includes('alamat') || h.includes('address') || h.includes('lokasi'))
       };
 
       const CHUNK_SIZE = 500;
@@ -179,6 +180,7 @@ const TapisanExcel: React.FC<TapisanProps> = ({ view, existingApps = [] }) => {
           const updateType = colIdx.updateType !== -1 ? String(row[colIdx.updateType] || '').trim() : '';
           const bpkuStatus = colIdx.bpku !== -1 ? String(row[colIdx.bpku] || '').trim() : '';
           const meetingStatus = colIdx.meeting !== -1 ? String(row[colIdx.meeting] || '').trim() : '';
+          const address = colIdx.address !== -1 ? String(row[colIdx.address] || '').trim() : '';
 
           if (!company || !cidb || !grade) continue;
           if (!gradeRegex.test(grade)) continue;
@@ -201,7 +203,8 @@ const TapisanExcel: React.FC<TapisanProps> = ({ view, existingApps = [] }) => {
           const id = transaction || `${cidb}-${date}` || `xl-${i}-${Date.now()}`;
           rows.push({
             id, company, cidb, grade, district: district || 'TIADA MAKLUMAT',
-            date, transactionCode: transaction, category, updateType, bpkuStatus, meetingStatus
+            date, transactionCode: transaction, category, updateType, bpkuStatus, meetingStatus,
+            alamatPerniagaan: address
           });
         }
 
@@ -312,6 +315,7 @@ const TapisanExcel: React.FC<TapisanProps> = ({ view, existingApps = [] }) => {
           dateSubmitted: item.date || '',
           bpkuStatus: item.bpkuStatus || '',
           meetingStatus: item.meetingStatus || '',
+          alamatPerniagaan: item.alamatPerniagaan || '',
           createdAt: serverTimestamp()
         });
       });
@@ -338,25 +342,28 @@ const TapisanExcel: React.FC<TapisanProps> = ({ view, existingApps = [] }) => {
     }
   };
 
+  const updateCartItem = async (id: string, updates: Partial<ExcelRow>) => {
+    try {
+      await ensureFirebaseAuth();
+      const docRef = doc(db, "applications", id);
+      await updateDoc(docRef, {
+        ...updates,
+        updatedAt: serverTimestamp()
+      });
+      toast.success(isEn ? "Item updated!" : "Item dikemaskini!", { duration: 1000 });
+    } catch (e) {
+      console.error("Update Item Error:", e);
+      toast.error(isEn ? "Failed to update item" : "Gagal kemaskini item");
+    }
+  };
+
   const updateCartItemCategory = async (id: string, company: string, newCategory: string) => {
     if (!confirm(isEn 
       ? `Are you sure you want to change the application type for ${company}?` 
       : `Adakah anda pasti ingin menukar jenis permohonan bagi syarikat ${company}?`)) {
       return;
     }
-
-    try {
-      await ensureFirebaseAuth();
-      const docRef = doc(db, "applications", id);
-      await updateDoc(docRef, {
-        category: newCategory,
-        updatedAt: serverTimestamp()
-      });
-      toast.success(isEn ? "Category updated!" : "Kategori dikemaskini!");
-    } catch (e) {
-      console.error("Update Category Error:", e);
-      toast.error(isEn ? "Failed to update category" : "Gagal kemaskini kategori");
-    }
+    updateCartItem(id, { category: newCategory });
   };
 
   const cartCounts = useMemo(() => {
@@ -430,14 +437,26 @@ const TapisanExcel: React.FC<TapisanProps> = ({ view, existingApps = [] }) => {
             ) : (
               filteredCartItems.map((item) => (
                 <div key={item.id} className="bg-white/5 border border-white/10 p-6 rounded-3xl flex items-center justify-between group hover:bg-white/10 transition-all">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-1">
-                        <h4 className="font-black text-sm uppercase tracking-tight truncate">{item.company}</h4>
-                        <span className="px-2 py-0.5 bg-white/10 rounded-md text-[9px] font-black text-white/60">{item.grade}</span>
+                    <div className="flex-1 min-w-0 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <input 
+                          value={item.company}
+                          onChange={(e) => updateCartItem(item.id, { company: e.target.value.toUpperCase() })}
+                          className="bg-transparent border-b border-transparent hover:border-white/20 focus:border-white/40 outline-none font-black text-sm uppercase tracking-tight py-1 w-full"
+                        />
+                        <span className="px-2 py-0.5 bg-white/10 rounded-md text-[9px] font-black text-white/60 shrink-0">{item.grade}</span>
                       </div>
-                      <div className="flex items-center gap-4">
+                      
+                      <div className="flex items-center gap-4 flex-wrap">
                         <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{item.district}</p>
-                        <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{item.cidb}</p>
+                        <div className="flex items-center gap-2">
+                           <span className="text-[8px] font-black text-white/20 uppercase tracking-widest Shrink-0">CIDB:</span>
+                           <input 
+                            value={item.cidb}
+                            onChange={(e) => updateCartItem(item.id, { cidb: e.target.value.toUpperCase() })}
+                            className="bg-transparent border-b border-transparent hover:border-white/20 focus:border-white/40 outline-none text-[10px] font-bold text-white/40 tracking-widest w-32"
+                          />
+                        </div>
                         {item.date && (
                           <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1">
                             <Calendar size={10} /> {item.date}
@@ -482,6 +501,7 @@ const TapisanExcel: React.FC<TapisanProps> = ({ view, existingApps = [] }) => {
                         meeting_status: item.meetingStatus,
                         transaction_code: item.transactionCode,
                         update_type: item.updateType,
+                        alamat_perniagaan: item.alamatPerniagaan,
                         firebaseDocId: item.id // This is the Firestore Doc ID
                       })}
                       className={`${accentBg} text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2`}
@@ -520,10 +540,27 @@ const TapisanExcel: React.FC<TapisanProps> = ({ view, existingApps = [] }) => {
             </div>
           </div>
           
-          <label className={`cursor-pointer ${accentBg} text-white px-8 py-4 rounded-2xl font-black text-xs uppercase shadow-xl hover:opacity-90 transition-all flex items-center gap-2`}>
-            <FileUp size={16} /> {isEn ? 'Upload Excel' : 'Muat Naik Excel'}
-            <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleFileUpload} />
-          </label>
+          <div className="flex items-center gap-4">
+            <label className={`cursor-pointer ${accentBg} text-white px-8 py-4 rounded-2xl font-black text-xs uppercase shadow-xl hover:opacity-90 transition-all flex items-center gap-2`}>
+              <FileUp size={16} /> {isEn ? 'Upload Excel' : 'Muat Naik Excel'}
+              <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleFileUpload} />
+            </label>
+
+            {excelData.length > 0 && (
+              <button 
+                onClick={() => {
+                  if (confirm(isEn ? "Reset all imported data?" : "Padam semua data yang diimport?")) {
+                    setExcelData([]);
+                    setSelectedRows(new Set());
+                    toast.success(isEn ? "Excel data cleared" : "Data Excel dikosongkan");
+                  }
+                }}
+                className="bg-white text-rose-500 px-6 py-4 rounded-2xl font-black text-xs uppercase border-2 border-rose-100 hover:bg-rose-50 transition-all flex items-center gap-2"
+              >
+                <Trash2 size={16} /> {isEn ? 'Reset' : 'Set Semula'}
+              </button>
+            )}
+          </div>
         </div>
 
         {excelData.length > 0 && (

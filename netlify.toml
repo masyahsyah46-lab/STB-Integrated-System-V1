@@ -4,3 +4,4 @@
 
 [build.environment]
   NPM_FLAGS = "--legacy-peer-deps"
+  SECRETS_SCAN_OMIT_VALUES = "AIzaSyCiRTUSrEm7mxZ4Hzfb2iT3QevF9tZm6xA"

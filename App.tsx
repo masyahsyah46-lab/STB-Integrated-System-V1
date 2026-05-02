@@ -26,6 +26,7 @@ import SnailProgress from './components/SnailProgress';
 import { db, ensureFirebaseAuth } from './services/firebaseService';
 import { doc, updateDoc, serverTimestamp, collection, query, where, onSnapshot } from 'firebase/firestore';
 import { useStore } from './store/useStore';
+import { audioManager } from './utils/audioManager';
 
 export type Language = 'ms' | 'en';
 
@@ -62,6 +63,26 @@ const App: React.FC = () => {
   } = useStore();
 
   const themeColor = useStore(state => state.getThemeColor());
+
+  // Initialize Global Audio
+  useEffect(() => {
+    audioManager.setupGlobalClicks();
+    
+    // Auto-resume BGM on first user interaction (browser policy compliance)
+    const handleFirstInteraction = () => {
+      audioManager.playBGM();
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+    };
+
+    document.addEventListener('click', handleFirstInteraction);
+    document.addEventListener('keydown', handleFirstInteraction);
+
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+    };
+  }, []);
 
   // Real-time unread notifications count
   useEffect(() => {

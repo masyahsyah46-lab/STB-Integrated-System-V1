@@ -212,10 +212,21 @@ const InputDatabase: React.FC<DatabaseProps> = () => {
       <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 md:p-12 shadow-sm space-y-12">
         <div className="flex items-center gap-4 border-b border-slate-100 pb-6">
            <div className={`w-12 h-12 ${accentBg} text-white rounded-2xl flex items-center justify-center text-3xl shadow-lg`}>📂</div>
-           <div>
+           <div className="flex-1">
              <h2 className="text-2xl font-black text-slate-800 tracking-tight uppercase">{t('input_pangkalan_data')}</h2>
              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{data.syarikat}</p>
            </div>
+           <button 
+            onClick={() => {
+              if (confirm(isEn ? "Reset this draft?" : "Set semula draf ini?")) {
+                setData(null);
+                useStore.getState().setActiveApplication(null);
+              }
+            }}
+            className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:bg-rose-50 px-4 py-2 rounded-xl transition-all border border-rose-100"
+           >
+             Set Semula
+           </button>
         </div>
 
         <div className={`p-8 rounded-[2.5rem] bg-slate-50 border-2 border-slate-200 space-y-8`}>
@@ -237,8 +248,8 @@ const InputDatabase: React.FC<DatabaseProps> = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-           <InputGroup label={t('nama_syarikat')} value={data.syarikat} readOnly className="md:col-span-2" />
-           <InputGroup label={t('no_cidb')} value={data.cidb} readOnly />
+           <InputGroup label={t('nama_syarikat')} value={data.syarikat} onChange={v => setData({...data, syarikat: v.toUpperCase()})} className="md:col-span-2" />
+           <InputGroup label={t('no_cidb')} value={data.cidb} onChange={v => setData({...data, cidb: v.toUpperCase()})} />
            
            <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('negeri_operasi')}</label>

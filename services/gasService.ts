@@ -208,6 +208,24 @@ export const gasService = {
   },
 
   /**
+   * Google Identity Auth Check
+   */
+  async checkAuth(email: string): Promise<any> {
+    try {
+      const response = await fetchWithRetry(GAS_URL_STB, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'checkAuth', email })
+      });
+      if (!response.ok) throw new Error(`GAS Auth Error: ${response.status}`);
+      return await response.json();
+    } catch (e) {
+      console.error("checkAuth error:", e);
+      throw e;
+    }
+  },
+
+  /**
    * Undo Recommendation or Approval
    */
   async undoAction(row: number, type: 'undo_syor' | 'undo_lulus', user: string): Promise<boolean> {
