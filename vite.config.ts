@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
-      base: '/STB-INTEGRATED-SYSTEM/', // TAMBAH BARIS INI: Ganti dengan nama repo GitHub anda
+      base: '/STB-Integrated-System-V1/', // TAMBAH BARIS INI: Ganti dengan nama repo GitHub anda
       server: {
         port: 3000,
         host: '0.0.0.0',
