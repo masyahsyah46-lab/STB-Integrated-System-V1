@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { gasService } from '../services/gasService';
@@ -38,7 +37,6 @@ const Login: React.FC = () => {
       // Verify access and get profile from Google Sheets
       const result = await gasService.checkAuth(email);
       
-      // TAMBAHAN: Kita tambah "&& result.user" untuk pastikan data pengguna wujud sebelum teruskan
       if (result && result.status === 'success' && result.user) {
         const userData = result.user;
         
@@ -58,18 +56,6 @@ const Login: React.FC = () => {
         setError(lang === 'ms' 
           ? "Akses Ditolak: Profil e-mel anda tiada dalam pangkalan data sistem (Google Sheets)." 
           : "Access Denied: Your email profile is not in the system database (Google Sheets).");
-      }
-
-        // Save session
-        localStorage.setItem('stb_user_email', email);
-        localStorage.setItem('stb_user_data', JSON.stringify(userData));
-        setUser(userData);
-        
-        toast.success(lang === 'ms' ? `Selamat Datang, ${userData.name}` : `Welcome, ${userData.name}`);
-      } else {
-        setError(lang === 'ms' 
-          ? "Akses Ditolak: E-mel anda tiada dalam pangkalan data sistem." 
-          : "Access Denied: Your email is not in the system database.");
       }
     } catch (err: any) {
       console.error("Login Error:", err);
