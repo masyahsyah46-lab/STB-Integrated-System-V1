@@ -6,15 +6,18 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
-      base: '/STB-Integrated-System-V1/', // Change this if repo name differs
+      // PENTING: Pastikan ini SAMA TEPAT dengan nama repo GitHub anda. 
+      // Jika repo anda huruf kecil (cth: stb-integrated-system-v1), tukar di bawah:
+      base: '/STB-Integrated-System-V1/', 
       server: {
         port: 3000,
         host: '0.0.0.0',
       },
       plugins: [react(), tailwindcss()],
       define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+        // Tambah || '' supaya build tak 'crash' jika rahsia GitHub tiada
+        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY || ''),
+        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || '')
       },
       resolve: {
         alias: {
