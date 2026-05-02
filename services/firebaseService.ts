@@ -4,7 +4,7 @@ import { getAnalytics, isSupported } from "firebase/analytics";
 import { getAuth, signInAnonymously } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCiRTUSrEm7mxZ4Hzfb2iT3QevF9tZm6xA", // fallback sementara
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "", // fallback sementara
   authDomain: "tapisan-stb-g4-g7.firebaseapp.com",
   databaseURL: "https://tapisan-stb-g4-g7-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "tapisan-stb-g4-g7",
