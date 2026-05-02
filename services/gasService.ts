@@ -1,5 +1,5 @@
 
-const GAS_URL_STB = "https://script.google.com/macros/s/AKfycbxURP82mPlQ7VAI6174CXQFTBdyUyrPvhtiso_U0XsD-3Toqn5PXp_W043hiKhk-ueP/exec";
+const GAS_URL_STB = "https://script.google.com/macros/s/AKfycbwPlE0FrXQ5H4i99ozCJDDCae2oo5j-ozovo3LMv4PymiLs6s8P9dZkuGPrRxBeSuh7/exec";
 
 export const MAIN_DRIVE_URL = "https://drive.google.com/drive/folders/1-IszGRdSjoJz2oOjUs_KO7HRz7oE2Hzn";
 
